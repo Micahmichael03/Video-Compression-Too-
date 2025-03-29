@@ -1,0 +1,10 @@
+# git clone https://git.ffmpeg.org/ffmpeg.git ffmpeg
+# conda install ffmpeg -c conda-forge 
+
+# Core dependencies
+ffmpeg-python>=0.2.0
+numpy>=1.21.0
+
+# Optional dependencies for enhanced functionality
+tqdm>=4.65.0  # For progress bars
+pillow>=9.0.0  # For image processing
