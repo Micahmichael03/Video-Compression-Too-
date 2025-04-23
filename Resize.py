@@ -12,19 +12,45 @@ import re
 
 # Function to get video duration in seconds using ffprobe
 def get_video_duration(input_path):
+    # Remove quotes if present and normalize path
+    input_path = input_path.strip('"').strip("'")
+    input_path = os.path.normpath(input_path)
+    
     cmd = ['ffprobe', '-v', 'error', '-show_entries', 'format=duration', 
            '-of', 'default=noprint_wrappers=1:nokey=1', input_path]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    return float(result.stdout.strip())
+    try:
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        return float(result.stdout.strip())
+    except FileNotFoundError:
+        print("Error: ffprobe not found. Please make sure FFmpeg is installed and added to your system PATH.")
+        print("You can download FFmpeg from: https://github.com/BtbN/FFmpeg-Builds/releases")
+        print("After installation, add the bin folder to your system PATH.")
+        exit(1)
+    except Exception as e:
+        print(f"Error getting video duration: {str(e)}")
+        exit(1)
 
 # Function to get video resolution (width x height) using ffprobe
 def get_video_resolution(input_path):
+    # Remove quotes if present and normalize path
+    input_path = input_path.strip('"').strip("'")
+    input_path = os.path.normpath(input_path)
+    
     cmd = ['ffprobe', '-v', 'error', '-show_entries', 'stream=width,height', 
            '-of', 'default=noprint_wrappers=1:nokey=1', input_path]
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-    output = result.stdout.strip().split('\n')
-    width, height = int(output[0]), int(output[1])
-    return width, height
+    try:
+        result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        output = result.stdout.strip().split('\n')
+        width, height = int(output[0]), int(output[1])
+        return width, height
+    except FileNotFoundError:
+        print("Error: ffprobe not found. Please make sure FFmpeg is installed and added to your system PATH.")
+        print("You can download FFmpeg from: https://github.com/BtbN/FFmpeg-Builds/releases")
+        print("After installation, add the bin folder to your system PATH.")
+        exit(1)
+    except Exception as e:
+        print(f"Error getting video resolution: {str(e)}")
+        exit(1)
 
 # Function to calculate bitrate based on target size and duration
 def calculate_bitrate(target_size_mb, duration_s):
@@ -168,12 +194,27 @@ def main():
     input_path = input("Enter the input video path (e.g., video.mp4): ").strip()
     output_path = input("Enter the output video path (e.g., output.mp4): ").strip()
     
+    # Remove quotes if present and normalize paths
+    input_path = input_path.strip('"').strip("'")
+    output_path = output_path.strip('"').strip("'")
+    input_path = os.path.normpath(input_path)
+    output_path = os.path.normpath(output_path)
+    
+    # Check if input file exists
+    if not os.path.exists(input_path):
+        print(f"Error: Input file not found: {input_path}")
+        exit(1)
+    
     # Get video duration and original file size
-    duration_s = get_video_duration(input_path)
-    original_size_mb = os.path.getsize(input_path) / (1024 * 1024)
-    duration_minutes = duration_s / 60
-    print(f"Video duration: {duration_minutes:.1f} minutes ({duration_minutes/60:.1f} hours)")
-    print(f"Original file size: {original_size_mb:.1f} MB")
+    try:
+        duration_s = get_video_duration(input_path)
+        original_size_mb = os.path.getsize(input_path) / (1024 * 1024)
+        duration_minutes = duration_s / 60
+        print(f"Video duration: {duration_minutes:.1f} minutes ({duration_minutes/60:.1f} hours)")
+        print(f"Original file size: {original_size_mb:.1f} MB")
+    except Exception as e:
+        print(f"Error processing video: {str(e)}")
+        exit(1)
     
     # Special handling for very small videos (less than 3MB)
     if original_size_mb < 3:
